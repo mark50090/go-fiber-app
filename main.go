@@ -95,7 +95,7 @@ func main() {
 
 		// ✅ เพิ่ม limit 10000
 		findOptions := options.Find()
-		findOptions.SetLimit(50000)
+		findOptions.SetLimit(10)
 
 		cursor, err := collection.Find(ctx, bson.D{}, findOptions)
 		if err != nil {
@@ -111,7 +111,7 @@ func main() {
 				"error": fmt.Sprintf("Failed to decode registers: %v", err),
 			})
 		}
-
+		// fmt.Printf("Data: %s", registers)
 		return c.JSON(registers)
 	})
 
@@ -181,6 +181,87 @@ func main() {
 
 		fmt.Println("Excel file created successfully")
 		return c.SendString("Hello World")
+	})
+
+	// 🟢 API: Export ข้อมูล Register เป็น Excel
+	app.Get("/export-registers", func(c *fiber.Ctx) error {
+		collection := mongoClient.Database("myappdb").Collection("registers")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// ✅ เพิ่ม limit 10000
+		findOptions := options.Find()
+		findOptions.SetLimit(100000)
+
+		cursor, err := collection.Find(ctx, bson.D{}, findOptions)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to fetch registers: %v", err),
+			})
+		}
+		defer cursor.Close(ctx)
+
+		var registers []Register
+		if err := cursor.All(ctx, &registers); err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to decode registers: %v", err),
+			})
+		}
+		//fmt.Printf("Data: %s", registers)
+		// ✅ สร้างไฟล์ Excel
+		f := excelize.NewFile()
+		sheet := "Registers"
+		index, err := f.NewSheet(sheet)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// ลบ Sheet1 ถ้าไม่ต้องการ
+		f.DeleteSheet("Sheet1")
+
+		// สร้าง headers
+		headers := []string{
+			"Batch", "Area Main", "Area Sub", "Code Hospital Main", "Code Hospital Sub",
+			"Hospital Main", "Hospital Sub", "Province Main", "Province Sub",
+			"PID", "DOB", "Sex", "Title", "Fname", "Lname", "Fullname",
+			"Register Date", "Status", "Type Hospital Main", "Change Right Date", "Change Right Memo",
+		}
+
+		// เขียน headers ลงใน row 1
+		for i, h := range headers {
+			cell, err := excelize.CoordinatesToCellName(i+1, 1)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if err := f.SetCellValue(sheet, cell, h); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		f.SetActiveSheet(index)
+
+		for rowIdx, reg := range registers {
+			data := []interface{}{
+				reg.Batch, reg.AreaMain, reg.AreaSub, reg.CodeHospitalMain, reg.CodeHospitalSub,
+				reg.HospitalMain, reg.HospitalSub, reg.ProvinceMain, reg.ProvinceSub,
+				reg.Pid, reg.Dob.Format("2006-01-02"), reg.Sex, reg.Title, reg.Fname, reg.Lname, reg.Fullname,
+				reg.RegisterDate.Format("2006-01-02"), reg.Status, reg.TypeHospitalMain,
+				reg.ChangeRightDate.Format("2006-01-02"), reg.ChangeRightMemo,
+			}
+			for colIdx, val := range data {
+				cell, _ := excelize.CoordinatesToCellName(colIdx+1, rowIdx+2)
+				f.SetCellValue(sheet, cell, val)
+			}
+		}
+
+		// if err := f.SaveAs("example.xlsx"); err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		// 📥 ส่งไฟล์กลับเป็น response
+		c.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		c.Set("Content-Disposition", "attachment; filename=registers.xlsx")
+		return f.Write(c.Context().Response.BodyWriter())
 	})
 
 	log.Printf("🚀 Server starting on port %s...\n", port)
