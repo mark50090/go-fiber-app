@@ -1,0 +1,29 @@
+ yaml
+app:
+  port : 3000
+  name : "iclaim-dashboard-backend"
+  env : "development"
+  prefork : false
+  disable_startup_message : false
+  enable_trusted_proxy_check : false
+
+  xthreads : 32
+  small_xthreads : 16
+  tiny_xthreads : 8
+
+  redis:
+    host : ""
+    ttl : ""
+    prefix_key : "iclaim-dashboard-backend"
+
+  core:
+    allow_origins : "*"
+  
+  database:
+    uri : "admin:zMJ4AknnXmNr5zZ@tcp(10.0.21.51:3306)/iclaim-v2?charset=utf8mb4&parseTime=True&loc=Local"
+    dbname : "iclaim-v2"
+  
+  gg_sheet:
+    sheet_id : "1-aDpcc8psVY5X0n45yLjfAj6Bxy-POPrlIOfWMGtmaI"
+    api_key : "AIzaSyD2zD4JUS928SW2hR92jA_WdMHURSIKo0E"
+  
