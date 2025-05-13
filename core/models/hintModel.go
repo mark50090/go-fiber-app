@@ -1,0 +1,102 @@
+package models
+
+import "time"
+
+type Register struct {
+	Batch            string    `bson:"batch" json:"batch"`
+	AreaMain         int       `bson:"area_main" json:"area_main"`
+	AreaSub          int       `bson:"area_sub" json:"area_sub"`
+	CodeHospitalMain string    `bson:"code_hospital_main" json:"code_hospital_main"`
+	CodeHospitalSub  string    `bson:"code_hospital_sub" json:"code_hospital_sub"`
+	HospitalMain     string    `bson:"hospital_main" json:"hospital_main"`
+	HospitalSub      string    `bson:"hospital_sub" json:"hospital_sub"`
+	ProvinceMain     string    `bson:"province_main" json:"province_main"`
+	ProvinceSub      string    `bson:"province_sub" json:"province_sub"`
+	Pid              string    `bson:"pid" json:"pid"`
+	Dob              time.Time `bson:"dob" json:"dob"`
+	Sex              string    `bson:"sex" json:"sex"`
+	Title            string    `bson:"title" json:"title"`
+	Fname            string    `bson:"fname" json:"fname"`
+	Lname            string    `bson:"lname" json:"lname"`
+	Fullname         string    `bson:"fullname" json:"fullname"`
+	RegisterDate     time.Time `bson:"register_date" json:"register_date"`
+	Status           string    `bson:"status" json:"status"`
+	TypeHospitalMain string    `bson:"type_hospital_main" json:"type_hospital_main"`
+	ChangeRightDate  time.Time `bson:"change_right_date" json:"change_right_date"`
+	ChangeRightMemo  string    `bson:"change_right_memo" json:"change_right_memo"`
+	CreatedAt        time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt        time.Time `bson:"updated_at" json:"updated_at"`
+}
+
+type Transaction struct {
+	Batch                string    `bson:"batch" json:"batch"`
+	TransactionUID       string    `bson:"transaction_uid" json:"transaction_uid"`
+	TransactionUIDOld    string    `bson:"transaction_uid_old" json:"transaction_uid_old"`
+	PatientPID           string    `bson:"patient_pid" json:"patient_pid"`
+	PatientDOB           string    `bson:"patient_dob" json:"patient_dob"`
+	Sex                  string    `bson:"sex" json:"sex"`
+	Fullname             string    `bson:"fullname" json:"fullname"`
+	Status               string    `bson:"status" json:"status"`
+	Area                 int       `bson:"area" json:"area"`
+	Province             string    `bson:"province" json:"province"`
+	HCode                string    `bson:"hcode" json:"hcode"`
+	Hospital             string    `bson:"hospital" json:"hospital"`
+	City                 string    `bson:"city" json:"city"`
+	Ministry             string    `bson:"ministry" json:"ministry"`
+	Department           string    `bson:"department" json:"department"`
+	TypeHospital         string    `bson:"type_hospital" json:"type_hospital"`
+	OPD                  any       `bson:"opd" json:"opd"`
+	IPD                  any       `bson:"ipd" json:"ipd"`
+	Diagnosis            []any     `bson:"diagnosis" json:"diagnosis"`
+	ADP                  []any     `bson:"adp" json:"adp"`
+	DRU                  []any     `bson:"dru" json:"dru"`
+	HN                   string    `bson:"hn" json:"hn"`
+	Total                float64   `bson:"total" json:"total"`
+	ServiceType          string    `bson:"service_type" json:"service_type"`
+	RepReport            bool      `bson:"rep_report" json:"rep_report"`
+	SubmitAmount         float64   `bson:"submit_amount" json:"submit_amount"`
+	Inscl                string    `bson:"inscl" json:"inscl"`
+	RejectDetail         []any     `bson:"reject_detail" json:"reject_detail"`
+	TotalAppeal          float64   `bson:"total_appeal" json:"total_appeal"`
+	SubmitAmountAppeal   float64   `bson:"submit_amount_appeal" json:"submit_amount_appeal"`
+	SubmitAmountDiscard  float64   `bson:"submit_amount_discard" json:"submit_amount_discard"`
+	SubmitAmountIncrease float64   `bson:"submit_amount_increase" json:"submit_amount_increase"`
+	CreateAt             time.Time `bson:"create_at" json:"create_at"`
+	SendDate             time.Time `bson:"send_date" json:"send_date"`
+	Procedure            []any     `bson:"procedure" json:"procedure"`
+	Adjrw                string    `bson:"adjrw" json:"adjrw"`
+	RepName              string    `bson:"rep_name" json:"rep_name"`
+	CreatedAt            time.Time `bson:"createdAt" json:"createdAt"`
+	UpdatedAt            time.Time `bson:"updatedAt" json:"updatedAt"`
+}
+
+type Budget struct {
+	CID                   string    `bson:"CID,omitempty" json:"CID,omitempty"`
+	FundHolderID          string    `bson:"FundHolderID,omitempty" json:"FundHolderID,omitempty"`
+	RegisDate             time.Time `bson:"RegisDate,omitempty" json:"RegisDate,omitempty"`
+	Ket                   int       `bson:"Ket,omitempty" json:"Ket,omitempty"`
+	TitleName             string    `bson:"TitleName,omitempty" json:"TitleName,omitempty"`
+	Fname                 string    `bson:"fname,omitempty" json:"fname,omitempty"`
+	Lname                 string    `bson:"lname,omitempty" json:"lname,omitempty"`
+	GenderName            string    `bson:"GenderName,omitempty" json:"GenderName,omitempty"`
+	Birthdate             time.Time `bson:"birthdate,omitempty" json:"birthdate,omitempty"`
+	HcodeMain             string    `bson:"HcodeMain,omitempty" json:"HcodeMain,omitempty"`
+	HospitalMain          string    `bson:"HospitalMain,omitempty" json:"HospitalMain,omitempty"`
+	ProvinceMain          string    `bson:"ProvinceMain,omitempty" json:"ProvinceMain,omitempty"`
+	HcodeSub              string    `bson:"HcodeSub,omitempty" json:"HcodeSub,omitempty"`
+	HospitalSub           string    `bson:"HospitalSub,omitempty" json:"HospitalSub,omitempty"`
+	ProvinceSub           string    `bson:"ProvinceSub,omitempty" json:"ProvinceSub,omitempty"`
+	TypeID                string    `bson:"TypeID,omitempty" json:"TypeID,omitempty"`
+	Province              string    `bson:"Province,omitempty" json:"Province,omitempty"`
+	AddressCode           string    `bson:"AddressCode,omitempty" json:"AddressCode,omitempty"`
+	AddressText           string    `bson:"AddressText,omitempty" json:"AddressText,omitempty"`
+	OPNormal              int       `bson:"OPNormal,omitempty" json:"OPNormal,omitempty"`
+	OPAE_OPRefer_PP       int       `bson:"OPAE_OPRefer_PP,omitempty" json:"OPAE_OPRefer_PP,omitempty"`
+	OPAE_OPRefer          int       `bson:"OPAE_OPRefer,omitempty" json:"OPAE_OPRefer,omitempty"`
+	PP                    int       `bson:"PP,omitempty" json:"PP,omitempty"`
+	AccountNumberHospital int       `bson:"account_number_hospital,omitempty" json:"account_number_hospital,omitempty"`
+	AccountNumberProvince int       `bson:"account_number_province,omitempty" json:"account_number_province,omitempty"`
+	Year                  string    `bson:"year,omitempty" json:"year,omitempty"`
+	CreatedAt             time.Time `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
+	UpdatedAt             time.Time `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
+}

@@ -1,30 +1,18 @@
 package main
 
 import (
-	"log"
-	"os"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
-
 	"go-fiber-app/configs"
-	"go-fiber-app/router"
+	"go-fiber-app/pkg"
+	s "go-fiber-app/server"
 )
 
 func main() {
-	godotenv.Load()
-
-	configs.ConnectMongo()
-
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
-
-	app := fiber.New()
-
-	router.SetupRoutes(app)
-
-	log.Printf("🚀 Server starting on port %s...\n", port)
-	log.Fatal(app.Listen(":" + port))
+	configs.NewAppInitTime()
+	cfg := configs.NewConfig()
+	db := pkg.MongoBuilder(cfg)
+	// cache := pkg.NewRedis(cfg)
+	log := pkg.NewAppLogsZap()
+	// server := servers.NewServer(cfg, db, cache, log)
+	server := s.NewServer(cfg, db , log)
+	server.Start()
 }
