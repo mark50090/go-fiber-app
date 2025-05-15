@@ -1,0 +1,184 @@
+package utils
+
+import (
+	"fmt"
+	"go-fiber-app/core/models"
+	"time"
+
+	"github.com/xuri/excelize/v2"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func SetupRegisSheet(f *excelize.File, sheetName string) {
+	title := fmt.Sprintf("รายงานการขึ้นทะเบียนประกันสุขภาพบุคคลที่มีปัญหาสถานะและสิทธิ ข้อมูล ณ วันที่ %s", ToThaiDate(time.Now()))
+
+	// Merge A1 ถึง P2
+	f.MergeCell(sheetName, "A1", "P2")
+	f.SetCellValue(sheetName, "A1", title)
+
+	// ตั้งค่า style สำหรับ title
+	styleTitle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 18, Family: "TH SarabunPSK"},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	f.SetCellStyle(sheetName, "A1", "P2", styleTitle)
+
+	// Header row (row 3)
+	headers := []string{
+		"ลำดับ", "เลขประจำตัว 13 หลัก", "ว/ด/ป เกิด", "อายุ", "เพศ",
+		"คำนำหน้าชื่อ", "ชื่อ", "นามสกุล", "วันที่ลงทะเบียน",
+		"รหัสหน่วยบริการหลัก", "ชื่อหน่วยบริการหลัก",
+		"รหัสหน่วยบริการรอง", "ชื่อหน่วยบริการรอง", "จังหวัด",
+		"วันที่เปลี่ยนสิทธิ", "หมายเหตุการเปลี่ยนสิทธิ",
+	}
+
+	f.SetSheetRow(sheetName, "A3", &[]interface{}{headers})
+
+	for colIdx, header := range headers {
+		cell, _ := excelize.CoordinatesToCellName(colIdx+1, 3)
+		f.SetCellValue(sheetName, cell, header)
+	}
+
+	// Style Header Row (row 3)
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true, Size: 14, Family: "TH SarabunPSK"},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center", Vertical: "center",
+		},
+		// Fill: &excelize.Fill{
+		// 	Type:    "pattern",
+		// 	Color:   []string{"#9BC2E6"},
+		// 	Pattern: 1,
+		// },
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+
+	f.SetCellStyle(sheetName, "A3", "P3", headerStyle)
+	f.SetColWidth(sheetName, "A", "P", 30)
+}
+
+func SetRegisStyle(f *excelize.File, sheet string) {
+	styleHeader, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold:   true,
+			Size:   14,
+			Family: "TH SarabunPSK",
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+			Vertical:   "center",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#9BC2E6"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+		},
+	})
+
+	styleCell, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Size:   14,
+			Family: "TH SarabunPSK",
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+			Vertical:   "center",
+		},
+		Border: []excelize.Border{
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+		},
+	})
+
+	rows, _ := f.GetRows(sheet)
+	for i := range rows {
+		rowIdx := i + 1
+		for col := 1; col <= len(rows[i]); col++ {
+			cell, _ := excelize.CoordinatesToCellName(col, rowIdx)
+			if rowIdx == 3 {
+				f.SetCellStyle(sheet, cell, cell, styleHeader)
+			} else {
+				f.SetCellStyle(sheet, cell, cell, styleCell)
+			}
+		}
+	}
+}
+
+func FormatRegisterRow(rowNumber int, data models.Register) []interface{} {
+	dob := getDate(data.Dob)
+	register := getDate(data.RegisterDate)
+	changeDate := getDate(data.ChangeRightDate)
+
+	memo := "-"
+	if data.ChangeRightMemo != "" {
+		memo = data.ChangeRightMemo
+	}
+
+	age := CalculateAge(dob)
+
+	return []interface{}{
+		rowNumber,
+		data.Pid,
+		ToThaiDate(dob),
+		age,
+		data.Sex,
+		data.Title,
+		data.Fname,
+		data.Lname,
+		ToThaiDate(register),
+		data.CodeHospitalMain,
+		data.HospitalMain,
+		data.CodeHospitalSub,
+		data.HospitalSub,
+		data.ProvinceMain,
+		ToThaiDate(changeDate),
+		memo,
+	}
+}
+
+func ToThaiDate(t time.Time) string {
+	if t.IsZero() {
+		return "-"
+	}
+	thYear := t.Year()
+	if thYear < 2400 {
+		thYear += 543
+	}
+	return fmt.Sprintf("%02d/%02d/%d", t.Day(), t.Month(), thYear)
+}
+
+func CalculateAge(dob time.Time) int {
+	now := time.Now()
+	age := now.Year() - dob.Year()
+	if now.YearDay() < dob.YearDay() {
+		age--
+	}
+	return age
+}
+
+func getDate(v interface{}) time.Time {
+	if v == nil {
+		return time.Time{}
+	}
+	switch t := v.(type) {
+	case time.Time:
+		return t
+	case primitive.DateTime:
+		return t.Time()
+	default:
+		return time.Time{}
+	}
+}

@@ -11,6 +11,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type HintRepository struct {
@@ -27,6 +28,7 @@ func NewHintRepository(db *mongo.Database) entities.HintRepository {
 		db:                         db,
 		CollectionHintTransaction:  db.Collection(configs.CollectionHintTransaction),
 		CollectionHintRegistration: db.Collection(configs.CollectionHintRegistration),
+
 		// collectionHintBudget:       db.Collection(configs.collectionHintBudget),
 	}
 }
@@ -118,5 +120,104 @@ func (r *HintRepository) QueryHintRegistration(filter dto.HintfilterReq) (result
 	if err := cursor.All(context.TODO(), &results); err != nil {
 		return nil, err
 	}
+	return results, nil
+}
+
+// CountHintRegistration ใช้นับจำนวน document ที่ตรงกับ filter
+func (r *HintRepository) CountHintRegister(filter dto.HintfilterReq) (int64, error) {
+	filterMap := utils.ConvertFilterToMap(filter)
+	filterBson, err := utils.FilterHintRegister(filterMap)
+	if err != nil {
+		return 0, err
+	}
+
+	return r.CollectionHintRegistration.CountDocuments(context.TODO(), filterBson)
+}
+
+// FindHintRegistrationBatch ดึงข้อมูลแบบแบ่งหน้า (batch) สำหรับ export excel
+func (r *HintRepository) FindHintRegistrationBatch(filter dto.HintfilterReq, batchIndex int, batchSize int64) ([]models.Register, error) {
+	filterMap := utils.ConvertFilterToMap(filter)
+	filterBson, err := utils.FilterHintRegister(filterMap)
+	if err != nil {
+		return nil, err
+	}
+
+	findOptions := options.Find()
+	findOptions.Skip = ptrInt64(int64(batchIndex) * batchSize)
+	findOptions.Limit = &batchSize
+
+	cursor, err := r.CollectionHintRegistration.Find(context.TODO(), filterBson, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var results []models.Register
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// ptrInt64 เป็น helper สำหรับสร้าง pointer ของ int64
+func ptrInt64(i int64) *int64 {
+	return &i
+}
+
+func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) ([]models.Register, error) {
+	filterMap := utils.ConvertFilterToMap(filter)
+	filterBson, err := utils.FilterHintRegister(filterMap)
+	if err != nil {
+		return nil, err
+	}
+
+	size := 10
+	pipeline := []bson.M{
+		{
+			"$match": filterBson,
+		},
+		{
+			"$project": bson.M{
+				"pid":                1,
+				"dob":                1,
+				"age":                1,
+				"sex":                1,
+				"fname":              1,
+				"lname":              1,
+				"title":              1,
+				"register_date":      1,
+				"code_hospital_main": 1,
+				"hospital_main":      1,
+				"code_hospital_sub":  1,
+				"hospital_sub":       1,
+				"province_main":      1,
+				"change_right_date":  1,
+				"change_right_memo":  1,
+			},
+		},
+		// {
+		// "$sort": bson.M{
+		// 	"hcode": -1,
+		// },
+		// },
+		{
+			"$limit": size,
+		},
+	}
+
+	cursor, err := r.CollectionHintRegistration.Aggregate(context.TODO(), pipeline)
+
+	// cursor, err := r.CollectionHintRegistration.Find(context.TODO(), filterBson)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var results []models.Register
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		return nil, err
+	}
+
 	return results, nil
 }

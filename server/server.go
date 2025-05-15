@@ -116,4 +116,5 @@ func (s *server) registerRoutesUnitCost(router fiber.Router, controller *control
 
 func (s *server) siaMarkControllerRoute(router fiber.Router, controller *controller.HintController) {
 	router.Get("/transaction", controller.GetTransaction)
+	router.Post("/excel", controller.ReportExcelRegistrationV3)
 }

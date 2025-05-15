@@ -2,6 +2,7 @@ package controller
 
 import (
 	// "fmt"
+
 	"go-fiber-app/core/dto"
 	"go-fiber-app/core/entities"
 	"go-fiber-app/core/models"
@@ -77,4 +78,26 @@ func (ct *HintController) GetHintRegistration(c *fiber.Ctx) error {
 		Code:    fiber.StatusOK,
 		Data:    results,
 	})
+}
+
+func (ct *HintController) ReportExcelRegistrationV3(c *fiber.Ctx) error {
+	var filter dto.HintfilterReq
+	var body map[string]interface{}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: "Invalid request body",
+			Code:    fiber.StatusBadRequest,
+			Error:   err.Error(),
+		})
+	}
+
+	if err := ct.service.GenerateRegistrationExcelReport(c, body, filter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: err.Error(),
+			Code:    fiber.StatusBadRequest,
+		})
+	}
+
+	return nil
 }
