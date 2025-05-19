@@ -62,7 +62,7 @@ func (s *server) Start() {
 	siaMarkRepo := repositories.NewHintRepository(s.MgDb)
 	siaMarkSrv := services.NewHintService(*s.cfg, siaMarkRepo)
 	siaMarkController := controller.NewHandlerHint(siaMarkSrv)
-	s.siaMarkControllerRoute(v1.Group("siamark"), siaMarkController)
+	s.siaMarkControllerRoute(v1.Group("report"), siaMarkController)
 
 	// unitCommentRepo := repositories.NewUnitCommentRepo(s.MgDb)
 	// unitCommentSrv := services.NewUnitCommentService(unitCommentRepo)
@@ -115,6 +115,13 @@ func (s *server) registerRoutesUnitCost(router fiber.Router, controller *control
 // }
 
 func (s *server) siaMarkControllerRoute(router fiber.Router, controller *controller.HintController) {
-	router.Get("/transaction", controller.GetTransaction)
-	router.Post("/excel", controller.ReportExcelRegistrationV3)
+	// router.Get("/transaction", controller.GetTransaction)
+	// router.Post("/excel", controller.ReportExcelRegistrationV3)
+	// router.Post("/report-hiv", controller.ReportExcelHiv)
+	route := router.Group("/", compress.New(compress.Config{
+		Level: compress.LevelBestSpeed,
+	}))
+	route.Post("/register-excel", controller.ReportExcelRegistration)
+	route.Post("/report-hiv", controller.ReportExcelHiv)
+
 }

@@ -80,11 +80,10 @@ func (ct *HintController) GetHintRegistration(c *fiber.Ctx) error {
 	})
 }
 
-func (ct *HintController) ReportExcelRegistrationV3(c *fiber.Ctx) error {
+func (ct *HintController) ReportExcelRegistration(c *fiber.Ctx) error {
 	var filter dto.HintfilterReq
-	var body map[string]interface{}
 
-	if err := c.BodyParser(&body); err != nil {
+	if err := c.BodyParser(&filter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
 			Message: "Invalid request body",
 			Code:    fiber.StatusBadRequest,
@@ -92,7 +91,30 @@ func (ct *HintController) ReportExcelRegistrationV3(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := ct.service.GenerateRegistrationExcelReport(c, body, filter); err != nil {
+	if err := ct.service.GenerateRegistrationExcelReport(c, filter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: err.Error(),
+			Code:    fiber.StatusBadRequest,
+		})
+	}
+
+	return nil
+}
+
+func (ct *HintController) ReportExcelHiv(c *fiber.Ctx) error {
+	var filter dto.HintfilterReq
+	// b, _ := json.MarshalIndent(body, "", "  ")
+	// fmt.Println(string(b))
+
+	if err := c.BodyParser(&filter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: "Invalid request body",
+			Code:    fiber.StatusBadRequest,
+			Error:   err.Error(),
+		})
+	}
+
+	if err := ct.service.GenerateHivExcelReport(c, filter); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
 			Message: err.Error(),
 			Code:    fiber.StatusBadRequest,

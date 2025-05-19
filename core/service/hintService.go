@@ -34,7 +34,7 @@ func NewHintService(config configs.Config, repo entities.HintRepository) entitie
 func (s *HintService) GetHintTransaction(filter dto.HintfilterReq) (results []models.Transaction, err error) {
 	// เรียกใช้งาน repository
 	results, err = s.hintRepo.QueryHintTransaction(filter)
-	println(len(results))
+	// println(len(results))
 	// fmt.Println(results)
 	if err != nil {
 		return nil, err
@@ -51,54 +51,7 @@ func (s *HintService) GetHintRegistration(filter dto.HintfilterReq) (results []m
 	return results, nil
 }
 
-// func (s *HintService) GenerateRegistrationExcelReport(c *fiber.Ctx, body map[string]interface{}, filter dto.HintfilterReq) error {
-// 	totalCount, err := s.hintRepo.CountHintRegister(filter)
-// 	if err != nil {
-// 		return fmt.Errorf("Failed to count documents: %v", err)
-// 	}
-// 	if totalCount >= 100000 {
-// 		c.Status(fiber.StatusBadRequest)
-// 		return c.JSON(fiber.Map{
-// 			"total":   totalCount,
-// 			"limit":   50000,
-// 			"status":  false,
-// 			"message": "ข้อมูลที่ต้องการดาวน์โหลดมีขนาดใหญ่เกินไป รอการปรับปรุงหรือแจ้งเจ้าหน้าที่",
-// 		})
-// 	}
-// 	f := excelize.NewFile()
-// 	sheet := "Sheet1"
-// 	f.NewSheet(sheet)
-// 	utils.SetupRegisSheet(f, sheet)
-// 	batchSize := int64(10000)
-// 	sumCount := int((totalCount + batchSize - 1) / batchSize)
-// 	rowNumber := 1
-// 	for i := 0; i < sumCount; i++ {
-// 		docs, err := s.hintRepo.FindHintRegistrationBatch(filter, i, batchSize)
-// 		if err != nil {
-// 			return fmt.Errorf("Query error at batch %d: %v", i, err)
-// 		}
-// 		for _, data := range docs {
-// 			rowNumber++
-// 			row := utils.FormatRegisterRow(rowNumber, data)
-// 			cell, _ := excelize.CoordinatesToCellName(1, rowNumber)
-// 			f.SetSheetRow(sheet, cell, &row)
-// 		}
-// 	}
-// 	utils.SetRegisStyle(f, sheet)
-// 	buffer, err := f.WriteToBuffer()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-// 	c.Set(fiber.HeaderContentDisposition, `attachment; filename="Hint Dashboard.xlsx"`)
-// 	c.Set(fiber.HeaderContentLength, strconv.Itoa(buffer.Len()))
-// 	if err := c.SendStream(buffer); err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-func (s *HintService) GenerateRegistrationExcelReport(c *fiber.Ctx, body map[string]interface{}, filter dto.HintfilterReq) error {
+func (s *HintService) GenerateRegistrationExcelReport(c *fiber.Ctx, filter dto.HintfilterReq) error {
 	// 1. ดึงข้อมูลทั้งหมด (ไม่มี count, skip, หรือ limit)
 	docs, err := s.hintRepo.FindAllHintRegistration(filter)
 	if err != nil {
@@ -129,6 +82,69 @@ func (s *HintService) GenerateRegistrationExcelReport(c *fiber.Ctx, body map[str
 
 	c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 	c.Set(fiber.HeaderContentDisposition, `attachment; filename="Hint Dashboard.xlsx"`)
+	c.Set(fiber.HeaderContentLength, strconv.Itoa(buffer.Len()))
+
+	return c.SendStream(buffer)
+}
+
+func (s *HintService) GenerateHivExcelReport(c *fiber.Ctx, filter dto.HintfilterReq) error {
+	// ดึงข้อมูลจาก repo
+	docs, err := s.hintRepo.FindDataHIVTemplate(filter)
+	// b, _ := json.MarshalIndent(docs, "", "  ")
+	// fmt.Println(string(b))
+	if err != nil {
+		return err
+	}
+
+	f := excelize.NewFile()
+	sheet := "Sheet1"
+	f.NewSheet(sheet)
+	utils.SetupHivSheet(f, sheet)
+
+	rowNumber := 4
+	index := 1
+
+	for _, tx := range docs {
+		rows := utils.SplitTransaction(tx) // ต้องมีฟังก์ชันนี้ใน utils
+		for _, r := range rows {
+			dobTh := utils.ToThaiDate(r.PatientDOB)
+			createTh := utils.ToThaiDate(r.CreatedAt)
+			age := utils.CalculateAge(r.PatientDOB)
+			sexStr := utils.MapSex(r.Sex)
+
+			f.SetCellValue(sheet, fmt.Sprintf("A%d", rowNumber), index)
+			f.SetCellValue(sheet, fmt.Sprintf("B%d", rowNumber), r.HCode)
+			f.SetCellValue(sheet, fmt.Sprintf("C%d", rowNumber), r.Hospital)
+			f.SetCellValue(sheet, fmt.Sprintf("D%d", rowNumber), r.ServiceType)
+			f.SetCellValue(sheet, fmt.Sprintf("E%d", rowNumber), r.HN)
+			f.SetCellValue(sheet, fmt.Sprintf("F%d", rowNumber), r.AN)
+			f.SetCellValue(sheet, fmt.Sprintf("G%d", rowNumber), r.PatientPID)
+			f.SetCellValue(sheet, fmt.Sprintf("H%d", rowNumber), r.Fullname)
+			f.SetCellValue(sheet, fmt.Sprintf("I%d", rowNumber), sexStr)
+			f.SetCellValue(sheet, fmt.Sprintf("J%d", rowNumber), dobTh)
+			f.SetCellValue(sheet, fmt.Sprintf("K%d", rowNumber), age)
+			f.SetCellValue(sheet, fmt.Sprintf("L%d", rowNumber), createTh)
+			f.SetCellValue(sheet, fmt.Sprintf("M%d", rowNumber), r.Code)
+			f.SetCellValue(sheet, fmt.Sprintf("N%d", rowNumber), r.Name)
+			f.SetCellValue(sheet, fmt.Sprintf("O%d", rowNumber), r.Amount)
+			f.SetCellValue(sheet, fmt.Sprintf("P%d", rowNumber), r.Cost)
+			f.SetCellValue(sheet, fmt.Sprintf("Q%d", rowNumber), r.SubmitAmount)
+
+			rowNumber++
+			index++
+		}
+	}
+
+	utils.SetHivStyle(f, sheet)
+
+	// แปลงเป็น buffer แล้วส่งเป็น Excel file
+	buffer, err := f.WriteToBuffer()
+	if err != nil {
+		return err
+	}
+
+	c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Set(fiber.HeaderContentDisposition, `attachment; filename="Hint HIV.xlsx"`)
 	c.Set(fiber.HeaderContentLength, strconv.Itoa(buffer.Len()))
 
 	return c.SendStream(buffer)

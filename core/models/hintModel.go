@@ -29,45 +29,46 @@ type Register struct {
 }
 
 type Transaction struct {
-	Batch                string    `bson:"batch" json:"batch"`
-	TransactionUID       string    `bson:"transaction_uid" json:"transaction_uid"`
-	TransactionUIDOld    string    `bson:"transaction_uid_old" json:"transaction_uid_old"`
-	PatientPID           string    `bson:"patient_pid" json:"patient_pid"`
-	PatientDOB           string    `bson:"patient_dob" json:"patient_dob"`
-	Sex                  string    `bson:"sex" json:"sex"`
-	Fullname             string    `bson:"fullname" json:"fullname"`
-	Status               string    `bson:"status" json:"status"`
-	Area                 int       `bson:"area" json:"area"`
-	Province             string    `bson:"province" json:"province"`
-	HCode                string    `bson:"hcode" json:"hcode"`
-	Hospital             string    `bson:"hospital" json:"hospital"`
-	City                 string    `bson:"city" json:"city"`
-	Ministry             string    `bson:"ministry" json:"ministry"`
-	Department           string    `bson:"department" json:"department"`
-	TypeHospital         string    `bson:"type_hospital" json:"type_hospital"`
-	OPD                  any       `bson:"opd" json:"opd"`
-	IPD                  any       `bson:"ipd" json:"ipd"`
-	Diagnosis            []any     `bson:"diagnosis" json:"diagnosis"`
-	ADP                  []any     `bson:"adp" json:"adp"`
-	DRU                  []any     `bson:"dru" json:"dru"`
-	HN                   string    `bson:"hn" json:"hn"`
-	Total                float64   `bson:"total" json:"total"`
-	ServiceType          string    `bson:"service_type" json:"service_type"`
-	RepReport            bool      `bson:"rep_report" json:"rep_report"`
-	SubmitAmount         float64   `bson:"submit_amount" json:"submit_amount"`
-	Inscl                string    `bson:"inscl" json:"inscl"`
-	RejectDetail         []any     `bson:"reject_detail" json:"reject_detail"`
-	TotalAppeal          float64   `bson:"total_appeal" json:"total_appeal"`
-	SubmitAmountAppeal   float64   `bson:"submit_amount_appeal" json:"submit_amount_appeal"`
-	SubmitAmountDiscard  float64   `bson:"submit_amount_discard" json:"submit_amount_discard"`
-	SubmitAmountIncrease float64   `bson:"submit_amount_increase" json:"submit_amount_increase"`
-	CreateAt             time.Time `bson:"create_at" json:"create_at"`
-	SendDate             time.Time `bson:"send_date" json:"send_date"`
-	Procedure            []any     `bson:"procedure" json:"procedure"`
-	Adjrw                string    `bson:"adjrw" json:"adjrw"`
-	RepName              string    `bson:"rep_name" json:"rep_name"`
-	CreatedAt            time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt            time.Time `bson:"updatedAt" json:"updatedAt"`
+	Batch                string      `bson:"batch" json:"batch"`
+	TransactionUID       string      `bson:"transaction_uid" json:"transaction_uid"`
+	TransactionUIDOld    string      `bson:"transaction_uid_old" json:"transaction_uid_old"`
+	PatientPID           string      `bson:"patient_pid" json:"patient_pid"`
+	PatientDOB           time.Time   `bson:"patient_dob" json:"patient_dob"`
+	Sex                  string      `bson:"sex" json:"sex"`
+	Fullname             string      `bson:"fullname" json:"fullname"`
+	Status               string      `bson:"status" json:"status"`
+	Area                 int         `bson:"area" json:"area"`
+	Province             string      `bson:"province" json:"province"`
+	HCode                string      `bson:"hcode" json:"hcode"`
+	Hospital             string      `bson:"hospital" json:"hospital"`
+	City                 string      `bson:"city" json:"city"`
+	Ministry             string      `bson:"ministry" json:"ministry"`
+	Department           string      `bson:"department" json:"department"`
+	TypeHospital         string      `bson:"type_hospital" json:"type_hospital"`
+	OPD                  any         `bson:"opd" json:"opd"`
+	IPD                  IPD         `bson:"ipd" json:"ipd"`
+	Diagnosis            []Diagnosis `bson:"diagnosis" json:"diagnosis"`
+	ADP                  []ADP       `bson:"adp"`
+	DRU                  []DRU       `bson:"dru"`
+	HN                   string      `bson:"hn" json:"hn"`
+	AN                   string      `bson:"an" json:"an"`
+	Total                float64     `bson:"total" json:"total"`
+	ServiceType          string      `bson:"service_type" json:"service_type"`
+	RepReport            bool        `bson:"rep_report" json:"rep_report"`
+	SubmitAmount         float64     `bson:"submit_amount" json:"submit_amount"`
+	Inscl                string      `bson:"inscl" json:"inscl"`
+	RejectDetail         []any       `bson:"reject_detail" json:"reject_detail"`
+	TotalAppeal          float64     `bson:"total_appeal" json:"total_appeal"`
+	SubmitAmountAppeal   float64     `bson:"submit_amount_appeal" json:"submit_amount_appeal"`
+	SubmitAmountDiscard  float64     `bson:"submit_amount_discard" json:"submit_amount_discard"`
+	SubmitAmountIncrease float64     `bson:"submit_amount_increase" json:"submit_amount_increase"`
+	CreateAt             time.Time   `bson:"create_at" json:"create_at"`
+	SendDate             time.Time   `bson:"send_date" json:"send_date"`
+	Procedure            []any       `bson:"procedure" json:"procedure"`
+	Adjrw                string      `bson:"adjrw" json:"adjrw"`
+	RepName              string      `bson:"rep_name" json:"rep_name"`
+	CreatedAt            time.Time   `bson:"createdAt" json:"createdAt"`
+	UpdatedAt            time.Time   `bson:"updatedAt" json:"updatedAt"`
 }
 
 type Budget struct {
@@ -99,4 +100,29 @@ type Budget struct {
 	Year                  string    `bson:"year,omitempty" json:"year,omitempty"`
 	CreatedAt             time.Time `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
 	UpdatedAt             time.Time `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
+}
+
+type ADP struct {
+	Code string `bson:"code"`
+	Name string `bson:"name"`
+	Qty  string `bson:"qty"`
+	Rate string `bson:"rate"`
+}
+
+type DRU struct {
+	DID     string `bson:"did"`
+	DIDName string `bson:"did_name"`
+	Amount  string `bson:"amount"`
+	Price   string `bson:"drug_price"`
+}
+
+type Diagnosis struct {
+	CodeDisease string `bson:"code_disease"`
+	DiseaseTH   string `bson:"disease_th"`
+	dx_type     string `bson:"dx_type"`
+}
+type IPD struct {
+	AdmDateTime string `bson:"adm_date_time" json:"adm_date_time"`
+	AN          string `bson:"an" json:"an"`
+	DscDateTime string `bson:"dsc_date_time" json:"dsc_date_time"`
 }

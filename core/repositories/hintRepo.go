@@ -165,14 +165,14 @@ func ptrInt64(i int64) *int64 {
 	return &i
 }
 
-func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) ([]models.Register, error) {
+func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) (result []models.Register, err error) {
 	filterMap := utils.ConvertFilterToMap(filter)
 	filterBson, err := utils.FilterHintRegister(filterMap)
 	if err != nil {
 		return nil, err
 	}
 
-	size := 10
+	// size := 100000
 	pipeline := []bson.M{
 		{
 			"$match": filterBson,
@@ -201,9 +201,9 @@ func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) ([]mo
 		// 	"hcode": -1,
 		// },
 		// },
-		{
-			"$limit": size,
-		},
+		// {
+		// 	"$limit": size,
+		// },
 	}
 
 	cursor, err := r.CollectionHintRegistration.Aggregate(context.TODO(), pipeline)
@@ -215,6 +215,72 @@ func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) ([]mo
 	defer cursor.Close(context.TODO())
 
 	var results []models.Register
+	if err := cursor.All(context.TODO(), &results); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func (r *HintRepository) FindDataHIVTemplate(filter dto.HintfilterReq) (result []models.Transaction, err error) {
+	filterMap := utils.ConvertFilterToMap(filter)
+	// c, _ := json.MarshalIndent(filterMap, "", "  ")
+	// fmt.Println(string(c))
+
+	filterBson, err := utils.FilterHintTransaction(filterMap)
+	if err != nil {
+		return nil, err
+	}
+
+	codeQuery := bson.M{
+		"diagnosis.code_disease": bson.M{
+			"$in": []string{"B20", "B21", "B22", "B23", "B24", "Z21", "Z113", "Z114", "Z206", "Z717", "B171", "B182"},
+		},
+		"status": bson.M{
+			"$in": []string{"settled", "approved"},
+		},
+	}
+
+	// รวม query ทั้งสอง
+	for k, v := range codeQuery {
+		filterBson[k] = v
+	}
+
+	var size = 1
+
+	// b, _ := json.MarshalIndent(codeQuery, "", "  ")
+	// fmt.Println(string(b))
+	// c, _ := json.MarshalIndent(filterBson, "", "  ")
+	// fmt.Println(string(c))
+
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: filterBson}},
+		bson.D{{Key: "$project", Value: bson.M{
+			"_id":           0, // ปิด _id
+			"hcode":         1,
+			"hospital":      1,
+			"service_type":  1,
+			"hn":            1,
+			"an":            bson.M{"$ifNull": bson.A{"$an", "-"}},
+			"patient_pid":   1,
+			"fullname":      1,
+			"sex":           1,
+			"patient_dob":   1,
+			"create_at":     1,
+			"submit_amount": 1,
+			"dru":           1,
+			"adp":           1,
+		}}},
+		bson.D{{Key: "$limit", Value: size}},
+	}
+
+	cursor, err := r.CollectionHintTransaction.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var results []models.Transaction
 	if err := cursor.All(context.TODO(), &results); err != nil {
 		return nil, err
 	}

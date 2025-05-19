@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-fiber-app/core/dto"
 	"strconv"
@@ -52,7 +53,7 @@ func FilterHintRegister(body map[string]string) (bson.M, error) {
 	if area, ok := body["area"]; ok && area != "" {
 		num, err := strconv.Atoi(area)
 		if err == nil {
-			filter["area_main"] = int32(num) // ✅ แปลงเป็น int32 เช่นกัน
+			filter["area_main"] = int32(num)
 		}
 	}
 
@@ -106,13 +107,12 @@ func ConvertFilterToMap(filter dto.HintfilterReq) map[string]string {
 		result["province"] = *filter.Province
 	}
 	if filter.Hospital != nil {
-		result["hospital"] = *filter.Hospital
+		result["hcode"] = *filter.Hospital
 	}
-	if filter.Start_date != nil {
-		result["start_date"] = *filter.Start_date
-	}
-	if filter.End_date != nil {
-		result["end_date"] = *filter.End_date
-	}
+	
+	
+
+	c, _ := json.MarshalIndent(result, "", "  ")
+	fmt.Println(string(c))
 	return result
 }
