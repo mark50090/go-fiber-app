@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"go-fiber-app/core/dto"
 	"strconv"
@@ -107,12 +106,10 @@ func ConvertFilterToMap(filter dto.HintfilterReq) map[string]string {
 		result["province"] = *filter.Province
 	}
 	if filter.Hospital != nil {
-		result["hcode"] = *filter.Hospital
+		result["hospital"] = *filter.Hospital
 	}
-	
-	
 
-	c, _ := json.MarshalIndent(result, "", "  ")
-	fmt.Println(string(c))
+	// c, _ := json.MarshalIndent(result, "", "  ")
+	// fmt.Println(string(c))
 	return result
 }

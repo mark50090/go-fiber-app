@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"go-fiber-app/configs"
 	"go-fiber-app/core/dto"
@@ -224,10 +226,14 @@ func (r *HintRepository) FindAllHintRegistration(filter dto.HintfilterReq) (resu
 
 func (r *HintRepository) FindDataHIVTemplate(filter dto.HintfilterReq) (result []models.Transaction, err error) {
 	filterMap := utils.ConvertFilterToMap(filter)
-	// c, _ := json.MarshalIndent(filterMap, "", "  ")
-	// fmt.Println(string(c))
+	c, _ := json.MarshalIndent(filterMap, "", "  ")
+	fmt.Println(string(c))
 
 	filterBson, err := utils.FilterHintTransaction(filterMap)
+
+	d, _ := json.MarshalIndent(filterBson, "", "  ")
+	fmt.Println(string(d))
+
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +252,7 @@ func (r *HintRepository) FindDataHIVTemplate(filter dto.HintfilterReq) (result [
 		filterBson[k] = v
 	}
 
-	var size = 1
+	var size = 80000
 
 	// b, _ := json.MarshalIndent(codeQuery, "", "  ")
 	// fmt.Println(string(b))
@@ -286,4 +292,78 @@ func (r *HintRepository) FindDataHIVTemplate(filter dto.HintfilterReq) (result [
 	}
 
 	return results, nil
+}
+
+func (r *HintRepository) FindDataSTPTemplate(filter dto.HintfilterReq) (*mongo.Cursor, error) {
+	filterMap := utils.ConvertFilterToMap(filter)
+	c, _ := json.MarshalIndent(filterMap, "", "  ")
+	fmt.Println(string(c))
+
+	// แปลง map เป็น bson filter
+	filterBson, err := utils.FilterHintTransaction(filterMap)
+	if err != nil {
+		return nil, err
+	}
+	d, _ := json.MarshalIndent(filterBson, "", "  ")
+	fmt.Println(string(d))
+
+	// size := 1
+
+	// MongoDB Aggregation Pipeline
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{Key: "$match", Value: bson.D{
+				{Key: "hcode", Value: bson.D{{Key: "$ne", Value: "00000"}}},
+				{Key: "patient_pid", Value: bson.D{{Key: "$ne", Value: ""}}},
+			}},
+		},
+		bson.D{
+			{Key: "$project", Value: bson.D{
+				{Key: "_id", Value: 0},
+				{Key: "transaction_uid", Value: 1},
+				{Key: "hcode", Value: 1},
+				{Key: "hospital", Value: 1},
+				{Key: "service_type", Value: 1},
+				{Key: "hn", Value: 1},
+				{Key: "an", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$ipd.an", "-"}}}},
+				{Key: "adm_date_time", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$ipd.adm_date_time", "-"}}}},
+				{Key: "dsc_date_time", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$ipd.dsc_date_time", "-"}}}},
+				{Key: "patient_pid", Value: 1},
+				{Key: "patient_dob", Value: 1},
+				{Key: "fullname", Value: 1},
+				{Key: "total", Value: 1},
+				{Key: "submit_amount", Value: bson.D{{Key: "$ifNull", Value: bson.A{"$submit_amount", 0}}}},
+				{Key: "adp", Value: 1},
+				{Key: "dru.did", Value: 1},
+				{Key: "dru.did_name", Value: 1},
+				{Key: "dru.amount", Value: 1},
+				{Key: "dru.drug_price", Value: 1},
+				{Key: "diagnosis", Value: 1},
+			}},
+		},
+		bson.D{
+			{Key: "$limit", Value: 1},
+		},
+		// bson.D{
+		// 	{Key: "$lookup", Value: bson.D{
+		// 		{Key: "from", Value: "register"},
+		// 		{Key: "localField", Value: "patient_pid"},
+		// 		{Key: "foreignField", Value: "pid"},
+		// 		{Key: "as", Value: "register_data"},
+		// 	}},
+		// },
+		// bson.D{
+		// 	{Key: "$unwind", Value: bson.D{
+		// 		{Key: "path", Value: "$register_data"},
+		// 		{Key: "preserveNullAndEmptyArrays", Value: true},
+		// 	}},
+		// },
+	}
+
+	cursor, err := r.CollectionHintTransaction.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	return cursor, nil
 }

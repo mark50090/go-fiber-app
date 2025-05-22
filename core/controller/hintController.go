@@ -123,3 +123,26 @@ func (ct *HintController) ReportExcelHiv(c *fiber.Ctx) error {
 
 	return nil
 }
+
+func (ct *HintController) ReportExcelSTP(c *fiber.Ctx) error {
+	var filter dto.HintfilterReq
+	// b, _ := json.MarshalIndent(body, "", "  ")
+	// fmt.Println(string(b))
+
+	if err := c.BodyParser(&filter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: "Invalid request body",
+			Code:    fiber.StatusBadRequest,
+			Error:   err.Error(),
+		})
+	}
+
+	if err := ct.service.GenerateSTPExcelReport(c, filter); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.Response{
+			Message: err.Error(),
+			Code:    fiber.StatusBadRequest,
+		})
+	}
+
+	return nil
+}

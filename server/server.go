@@ -123,5 +123,6 @@ func (s *server) siaMarkControllerRoute(router fiber.Router, controller *control
 	}))
 	route.Post("/register-excel", controller.ReportExcelRegistration)
 	route.Post("/report-hiv", controller.ReportExcelHiv)
+	route.Post("/report-stp", controller.ReportExcelSTP)
 
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-fiber-app/configs"
 	"go-fiber-app/core/dto"
@@ -134,6 +135,70 @@ func (s *HintService) GenerateHivExcelReport(c *fiber.Ctx, filter dto.Hintfilter
 			index++
 		}
 	}
+
+	utils.SetHivStyle(f, sheet)
+
+	// แปลงเป็น buffer แล้วส่งเป็น Excel file
+	buffer, err := f.WriteToBuffer()
+	if err != nil {
+		return err
+	}
+
+	c.Set(fiber.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Set(fiber.HeaderContentDisposition, `attachment; filename="Hint HIV.xlsx"`)
+	c.Set(fiber.HeaderContentLength, strconv.Itoa(buffer.Len()))
+
+	return c.SendStream(buffer)
+}
+
+func (s *HintService) GenerateSTPExcelReport(c *fiber.Ctx, filter dto.HintfilterReq) error {
+	// ดึงข้อมูลจาก repo
+	docs, err := s.hintRepo.FindDataSTPTemplate(filter)
+
+	b, _ := json.MarshalIndent(docs, "", "  ")
+	fmt.Println(string(b))
+	if err != nil {
+		return err
+	}
+
+	f := excelize.NewFile()
+	sheet := "Sheet1"
+	f.NewSheet(sheet)
+	utils.SetupHivSheet(f, sheet)
+
+	// rowNumber := 4
+	// index := 1
+
+	// for _, tx := range docs {
+	// 	rows := utils.SplitTransaction(tx) // ต้องมีฟังก์ชันนี้ใน utils
+	// 	for _, r := range rows {
+	// 		dobTh := utils.ToThaiDate(r.PatientDOB)
+	// 		createTh := utils.ToThaiDate(r.CreatedAt)
+	// 		age := utils.CalculateAge(r.PatientDOB)
+	// 		sexStr := utils.MapSex(r.Sex)
+
+	// 		f.SetCellValue(sheet, fmt.Sprintf("A%d", rowNumber), index)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("B%d", rowNumber), r.HCode)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("C%d", rowNumber), r.Hospital)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("D%d", rowNumber), r.ServiceType)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("E%d", rowNumber), r.HN)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("F%d", rowNumber), r.AN)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("G%d", rowNumber), r.PatientPID)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("H%d", rowNumber), r.Fullname)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("I%d", rowNumber), sexStr)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("J%d", rowNumber), dobTh)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("K%d", rowNumber), age)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("L%d", rowNumber), createTh)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("M%d", rowNumber), r.Code)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("N%d", rowNumber), r.Name)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("O%d", rowNumber), r.Amount)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("P%d", rowNumber), r.Cost)
+	// 		f.SetCellValue(sheet, fmt.Sprintf("Q%d", rowNumber), r.SubmitAmount)
+
+	// 		rowNumber++
+	// 		index++
+	// 	}
+	// }
 
 	utils.SetHivStyle(f, sheet)
 

@@ -47,7 +47,7 @@ type CommentReq struct {
 type HintfilterReq struct {
 	Area     *string `query:"area" bson:"area"`
 	Province *string `query:"province" bson:"province"`
-	Hospital *string `query:"hcode" bson:"hcode"`
+	Hospital *string `query:"hospital" bson:"hospital"`
 	// year int
 	// Start_date *string `query:"start_date" bson:"date"`
 	// End_date   *string `query:"end_date" bson:"date"`
